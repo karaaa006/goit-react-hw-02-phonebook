@@ -74,7 +74,6 @@ class App extends Component {
         <Filter filter={this.state.filter} onChange={this.contactFilter} />
         <ContactList
           contacts={this.getFilteredContacts()}
-          filter={this.state.filter}
           handleDel={this.deleteContact}
         />
       </div>
