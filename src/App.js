@@ -2,66 +2,81 @@ import { Component } from "react";
 import shortid from "shortid";
 
 import "./App.css";
+import { ContactForm } from "./components/ContactForm/ContactForm";
 import { ContactList } from "./components/ContactList/ContactList";
-import { Section } from "./components/Section/Section";
+import { Filter } from "./components/Filter/Filter";
 
 class App extends Component {
   state = {
-    contacts: [],
-    name: "",
-    number: "",
+    contacts: [
+      { id: "id-1", name: "Rosie Simpson", number: "459-12-56" },
+      { id: "id-2", name: "Hermione Kline", number: "443-89-12" },
+      { id: "id-3", name: "Eden Clements", number: "645-17-79" },
+      { id: "id-4", name: "Annie Copeland", number: "227-91-26" },
+    ],
+    filter: "",
   };
 
-  handleChange = (e) => {
-    this.setState({ [e.target.name]: e.target.value });
+  handleSubmit = ({ name, number }) => {
+    if (this.isInclude(name)) {
+      alert(`${name} is already in contacts.`);
+      return;
+    }
+
+    this.setState((prev) => {
+      return {
+        contacts: prev.contacts.concat({
+          id: shortid.generate(),
+          name,
+          number,
+        }),
+      };
+    });
   };
 
-  handleClick = (e) => {
-    const { name, number, contacts } = this.state;
+  contactFilter = (e) => {
+    this.setState({ filter: e.target.value });
+  };
 
-    e.preventDefault();
+  getFilteredContacts = () => {
+    return this.state.contacts.filter((contact) =>
+      contact.name.toLowerCase().includes(this.state.filter.toLowerCase())
+    );
+  };
 
-    this.setState({
-      contacts: contacts.concat({ id: shortid.generate(), name, number }),
+  isInclude = (name) => {
+    return this.state.contacts.some(
+      (contact) => contact.name.toLowerCase() === name.toLowerCase()
+    );
+  };
+
+  deleteContact = (e) => {
+    const delIdx = this.state.contacts.findIndex((contact) => {
+      return contact.id === e.target.dataset.contactId;
+    });
+
+    this.setState((prev) => {
+      const prevCopy = [...prev.contacts];
+      prevCopy.splice(delIdx, 1);
+
+      return {
+        contacts: prevCopy,
+      };
     });
   };
 
   render() {
     return (
       <div className="App">
-        <Section text="Phonebook">
-          <form action="submit" className="form">
-            <label>
-              Name
-              <input
-                type="text"
-                name="name"
-                pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-                title="Имя может состоять только из букв, апострофа, тире и пробелов. Например Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan и т. п."
-                required
-                onChange={this.handleChange}
-              />
-            </label>
-            <label>
-              Number
-              <input
-                type="tel"
-                name="number"
-                pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-                title="Номер телефона должен состоять цифр и может содержать пробелы, тире, круглые скобки и может начинаться с +"
-                required
-                onChange={this.handleChange}
-              />
-            </label>
-
-            <button type="submit" onClick={this.handleClick}>
-              Add contact
-            </button>
-          </form>
-        </Section>
-        <Section text="Contacts">
-          <ContactList contacts={this.state.contacts} />
-        </Section>
+        <h1>Phonebook</h1>
+        <ContactForm onSubmit={this.handleSubmit} />
+        <h2>Contacts</h2>
+        <Filter filter={this.state.filter} onChange={this.contactFilter} />
+        <ContactList
+          contacts={this.getFilteredContacts()}
+          filter={this.state.filter}
+          handleDel={this.deleteContact}
+        />
       </div>
     );
   }
